@@ -18,6 +18,7 @@ export default {
     data_torrents_details: {},
     data_torrents_settings: {},
     lastSelectedRow: -1,
+    selectedFilters: [],
   },
 
   effects: {
@@ -106,8 +107,22 @@ export default {
       yield put({
         type: 'changeSelectedTorrentSettings',
       });
-
     },
+
+    *addSelectedFilter({ payload }, { call, put }) {
+      yield put({
+        type: 'insertSelectedFilter',
+        payload: payload,
+      });
+    },
+
+    *delSelectedFilter({ payload }, { call, put }) {
+      yield put({
+        type: 'removeSelectedFilter',
+        payload: payload,
+      });
+    },
+
   },
 
   reducers: {
@@ -376,5 +391,26 @@ export default {
         data_torrents_details: dtorrents_details,
       };
     },
+
+    insertSelectedFilter(state, action) {
+      const selectedFilters = [...state.selectedFilters];
+      selectedFilters.push(action.payload);
+
+      return {
+        ...state,
+        selectedFilters: selectedFilters,
+      };
+    },
+
+    removeSelectedFilter(state, action) {
+      const selectedFilters = [...state.selectedFilters];
+      selectedFilters.splice(action.payload, 1);
+
+      return {
+        ...state,
+        selectedFilters: selectedFilters,
+      };
+    },
+
   },
 };

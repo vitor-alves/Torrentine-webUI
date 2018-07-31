@@ -4,7 +4,7 @@ import DrawerMenu from 'rc-drawer';
 import SiderMenu from './SiderMenu';
 
 const SiderMenuWrapper = props => {
-  const { isMobile, collapsed } = props;
+  const { isMobile, collapsed, torrents} = props;
   return isMobile ? (
     <DrawerMenu
       getContainer={null}

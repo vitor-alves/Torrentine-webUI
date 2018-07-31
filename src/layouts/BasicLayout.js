@@ -206,6 +206,7 @@ class BasicLayout extends React.PureComponent {
       match,
       location,
       program,
+      torrents,
     } = this.props;
     const { isMobile: mb } = this.state;
     const bashRedirect = this.getBaseRedirect();
@@ -222,6 +223,8 @@ class BasicLayout extends React.PureComponent {
           location={location}
           isMobile={mb}
           onCollapse={this.handleMenuCollapse}
+          torrents={this.props.torrents}
+          dispatch={this.props.dispatch}
         />
         <Layout>
           <Header style={{ padding: 0 }}>
@@ -270,9 +273,11 @@ class BasicLayout extends React.PureComponent {
   }
 }
 
-export default connect(({ user, global = {}, loading, program }) => ({
+export default connect(({ user, global = {}, program, torrents}) => ({
   currentUser: user.currentUser,
   collapsed: global.collapsed,
   notices: global.notices,
   program,
+  torrents,
+
 }))(BasicLayout);

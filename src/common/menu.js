@@ -56,30 +56,6 @@ const menuData = [
       },
     ],
   },
-  {
-    name: 'Trackers',
-    icon: 'form',
-    path: 'form',
-    children: [
-      {
-        name: 'Show All',
-        path: 'teste9',
-      },
-      {
-        name: 'leechers-paradise.org',
-        path: 'teste10',
-      },
-      {
-        name: 'openbittorrent.com',
-        path: 'teste11',
-      },
-      {
-        name: 'opentrackr.org',
-        authority: 'admin',
-        path: '12',
-      },
-    ],
-  },
 ];
 
 function formatter(data, parentPath = '/', parentAuthority) {

@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { Layout, Menu, Icon } from 'antd';
 import pathToRegexp from 'path-to-regexp';
+import { connect } from 'dva';
 import { Link } from 'dva/router';
 import styles from './index.less';
 import { urlToList } from '../_utils/pathTools';
@@ -48,6 +49,9 @@ export const getMenuMatchKeys = (flatMenuKeys, paths) =>
     []
   );
 
+@connect(({ torrents }) => ({
+  torrents,
+}))
 export default class SiderMenu extends PureComponent {
   constructor(props) {
     super(props);
@@ -56,6 +60,7 @@ export default class SiderMenu extends PureComponent {
     this.state = {
       openKeys: this.getDefaultCollapsedSubMenus(props),
     };
+    console.log(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -146,7 +151,7 @@ export default class SiderMenu extends PureComponent {
       }
       return null;
     } else {
-      return <Menu.Item key={item.path}>{this.getMenuItemPath(item)}</Menu.Item>;
+      return <Menu.Item key={item.path}>{item.name}</Menu.Item>;
     }
   };
 
@@ -166,14 +171,6 @@ export default class SiderMenu extends PureComponent {
         return this.checkPermissionItem(item.authority, ItemDom);
       })
       .filter(item => item);
-  };
-
-  // Get the currently selected menu
-  getSelectedMenuKeys = () => {
-    const {
-      location: { pathname },
-    } = this.props;
-    return getMenuMatchKeys(this.flatMenuKeys, urlToList(pathname));
   };
 
   // conversion Path
@@ -206,9 +203,26 @@ export default class SiderMenu extends PureComponent {
     });
   };
 
+  handleOnClick = (e) => {
+    const { dispatch } = this.props;
+    var keyIndex = this.props.torrents.selectedFilters.indexOf(e.key)
+    if(keyIndex > -1) {
+      dispatch({
+        type: 'torrents/delSelectedFilter',
+        payload: keyIndex,
+      });
+    }
+    else {
+      dispatch({
+        type: 'torrents/addSelectedFilter',
+        payload: e.key,
+      });
+    }
+  }
+
   render() {
-    const { logo, collapsed, onCollapse } = this.props;
-    const { openKeys } = this.state;
+    const { logo, collapsed, onCollapse, torrents} = this.props;
+    const { openKeys} = this.state;
     // Don't show popup menu when it is been collapsed
     const menuProps = collapsed
       ? {}
@@ -216,9 +230,8 @@ export default class SiderMenu extends PureComponent {
           openKeys,
         };
     // if pathname can't match, use the nearest parent's key
-    let selectedKeys = this.getSelectedMenuKeys();
-    if (!selectedKeys.length) {
-      selectedKeys = [openKeys[openKeys.length - 1]];
+    if (!torrents.selectedFilters.length) {
+      torrents.selectedFilters = [openKeys[openKeys.length - 1]];
     }
     return (
       <Sider
@@ -242,8 +255,9 @@ export default class SiderMenu extends PureComponent {
           mode="inline"
           {...menuProps}
           onOpenChange={this.handleOpenChange}
-          selectedKeys={selectedKeys}
-          multiple={true}
+          selectedKeys={torrents.selectedFilters}
+          onClick={this.handleOnClick}
+          multiple
           style={{ padding: '16px 0', width: '100%' }}
         >
           {this.getNavMenuItems(this.menus)}
