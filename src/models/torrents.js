@@ -3,6 +3,7 @@ import {
   getAllTorrentsFiles,
   getAllTorrentsPeers,
   getAllTorrentsTrackers,
+    getAllTorrentsSettings,
 } from '../services/api';
 
 export default {
@@ -15,7 +16,8 @@ export default {
     data_torrents_trackers: [],
     data_torrents_status: [],
     data_torrents_details: {},
-    lastSelectedRow: -1, // TODO - this should start as -1
+    data_torrents_settings: {},
+    lastSelectedRow: -1,
   },
 
   effects: {
@@ -66,6 +68,19 @@ export default {
         type: 'changeSelectedTorrentTrackers',
       });
     },
+
+    *getSettings(_, { call, put }) {
+      const data = yield call(getAllTorrentsSettings);
+      yield put({
+        type: 'saveAllTorrentsSettings',
+        payload: data,
+      });
+
+      yield put({
+        type: 'changeSelectedTorrentSettings',
+      });
+    },
+
     *setLastSelectedRow({ payload }, { call, put }) {
       yield put({
         type: 'saveLastSelectedRow',
@@ -87,6 +102,11 @@ export default {
       yield put({
         type: 'changeSelectedTorrentDetails',
       });
+
+      yield put({
+        type: 'changeSelectedTorrentSettings',
+      });
+
     },
   },
 
@@ -278,6 +298,44 @@ export default {
       return {
         ...state,
         data_torrents_trackers: dtorrents_trackers,
+      };
+    },
+
+    saveAllTorrentsSettings(state, action) {
+      // INFO: This will delete any existing torrents in torrentsList that is not in
+      // the request json torrents list.
+      let tList = {
+        ...action.payload.torrents,
+      };
+      for (const key of Object.keys(state.torrentsList)) {
+        if (key in tList) {
+          let { settings, ...other_keys } = state.torrentsList[key];
+          tList[key] = {
+            ...tList[key],
+            ...other_keys,
+          };
+        }
+      }
+
+      return {
+        ...state,
+        torrentsList: tList,
+      };
+    },
+
+    changeSelectedTorrentSettings(state, action) {
+      const dtorrents_settings = {};
+      const id = state.data_torrents_status[state.lastSelectedRow].id;
+      let t = state.torrentsList[id];
+      if (typeof t !== 'undefined') {
+        dtorrents_settings.upload_limit = t.settings.upload_limit;
+        dtorrents_settings.download_limit = t.settings.download_limit;
+        dtorrents_settings.sequential_download = t.settings.sequential_download;
+      }
+
+      return {
+        ...state,
+        data_torrents_settings: dtorrents_settings,
       };
     },
 

@@ -9,7 +9,6 @@ import classNames from 'classnames';
 import pathToRegexp from 'path-to-regexp';
 import { enquireScreen, unenquireScreen } from 'enquire-js';
 import GlobalHeader from '../components/GlobalHeader';
-import GlobalFooter from '../components/GlobalFooter';
 import SiderMenu from '../components/SiderMenu';
 import NotFound from '../routes/Exception/404';
 import { getRoutes } from '../utils/utils';
@@ -194,9 +193,6 @@ class BasicLayout extends React.PureComponent {
   handleNoticeVisibleChange = visible => {
     const { dispatch } = this.props;
     if (visible) {
-      dispatch({
-        type: 'global/fetchNotices',
-      });
     }
   };
 
@@ -209,7 +205,7 @@ class BasicLayout extends React.PureComponent {
       routerData,
       match,
       location,
-      session,
+      program,
     } = this.props;
     const { isMobile: mb } = this.state;
     const bashRedirect = this.getBaseRedirect();
@@ -232,14 +228,10 @@ class BasicLayout extends React.PureComponent {
             <GlobalHeader
               logo={logo}
               currentUser={currentUser}
-              fetchingNotices={fetchingNotices}
-              notices={notices}
               collapsed={collapsed}
               isMobile={mb}
-              onNoticeClear={this.handleNoticeClear}
               onCollapse={this.handleMenuCollapse}
               onMenuClick={this.handleMenuClick}
-              onNoticeVisibleChange={this.handleNoticeVisibleChange}
             />
           </Header>
           <Content style={{ margin: '24px 24px 0', height: '100%' }}>
@@ -262,7 +254,7 @@ class BasicLayout extends React.PureComponent {
             </Switch>
           </Content>
           <Footer style={{ padding: 0 }}>
-            <StatusBar session={this.props.session.session} />
+            <StatusBar program={this.props.program.program} />
           </Footer>
         </Layout>
       </Layout>
@@ -278,10 +270,9 @@ class BasicLayout extends React.PureComponent {
   }
 }
 
-export default connect(({ user, global = {}, loading, session }) => ({
+export default connect(({ user, global = {}, loading, program }) => ({
   currentUser: user.currentUser,
   collapsed: global.collapsed,
-  fetchingNotices: loading.effects['global/fetchNotices'],
   notices: global.notices,
-  session,
+  program,
 }))(BasicLayout);

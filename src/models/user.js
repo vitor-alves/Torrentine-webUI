@@ -38,14 +38,5 @@ export default {
         currentUser: action.payload || {},
       };
     },
-    changeNotifyCount(state, action) {
-      return {
-        ...state,
-        currentUser: {
-          ...state.currentUser,
-          notifyCount: action.payload,
-        },
-      };
-    },
   },
 };

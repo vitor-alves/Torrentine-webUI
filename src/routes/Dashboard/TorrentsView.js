@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import { connect } from 'dva';
-import { Row, Col, Table, Tabs, Select, Divider, Progress, Checkbox, InputNumber } from 'antd';
+import { Row, Col, Table, Tabs, Select, Divider, Progress, Checkbox, InputNumber, Input } from 'antd';
 import styles from './TorrentsView.less';
 import StatusBar from 'components/StatusBar';
 import TorrentsTable from 'components/TorrentsTable';
@@ -52,9 +52,9 @@ const columns_torrents_trackers = [
   { title: 'Message', width: 400, dataIndex: 'message' },
 ];
 
-@connect(({ torrents, session }) => ({
+@connect(({ torrents, program }) => ({
   torrents,
-  session,
+  program,
 }))
 export default class TorrentView extends Component {
   state = {};
@@ -79,8 +79,15 @@ export default class TorrentView extends Component {
         type: 'torrents/getTrackers',
       });
       dispatch({
-        type: 'session/getStatus',
+        type: 'torrents/getSettings',
       });
+      dispatch({
+        type: 'program/getStatus',
+      });
+      dispatch({
+        type: 'program/getSettings',
+      });
+
     }, torrentStatusUpdateTime);
   }
 
@@ -225,28 +232,19 @@ export default class TorrentView extends Component {
               </TabPane>
               <TabPane tab="Settings" key="5">
                 <Row>
-                  <Col span={24}>
-                    <Progress percent={50} status="active" />
-                  </Col>
-                </Row>
-                <Row>
                   <Col span={6}>
                     <div>
-                      <Checkbox>Sequential download</Checkbox>{' '}
+                      <Input addonBefore="Download Speed Limit" addonAfter="KB/s" defaultValue={torrents.data_torrents_settings.download_limit} />
                     </div>
 
                     <div>
-                      {' '}
-                      <Checkbox>Auto managed</Checkbox>
-                    </div>
-                    <div>
-                      {' '}
-                      Download Speed Limit <InputNumber min={-1} defaultValue={99} />{' '}
+                  
+                      <Input addonBefore="Upload Speed Limit" addonAfter="KB/s" defaultValue={torrents.data_torrents_settings.upload_limit} />
+
                     </div>
 
                     <div>
-                      {' '}
-                      Upload Speed Limit <InputNumber min={-1} defaultValue={99} />{' '}
+                      <Checkbox >Sequential download</Checkbox>{' '}
                     </div>
                   </Col>
                   <Col span={6} />
