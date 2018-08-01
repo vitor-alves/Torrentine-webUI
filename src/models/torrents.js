@@ -1,9 +1,11 @@
 import {
   getAllTorrentsStatus,
+  getAllTorrentsInfo,
   getAllTorrentsFiles,
   getAllTorrentsPeers,
   getAllTorrentsTrackers,
-    getAllTorrentsSettings,
+  getAllTorrentsSettings,
+  patchTorrentsSettings,
 } from '../services/api';
 
 export default {
@@ -12,12 +14,14 @@ export default {
   state: {
     torrentsList: {},
     data_torrents_files: [],
+    data_torrents_info: {},
     data_torrents_peers: [],
     data_torrents_trackers: [],
     data_torrents_status: [],
     data_torrents_details: {},
     data_torrents_settings: {},
     lastSelectedRow: -1,
+    lastSelectedId: -1,
     selectedFilters: [],
   },
 
@@ -31,6 +35,18 @@ export default {
 
       yield put({
         type: 'changeSelectedTorrentDetails',
+      });
+    },
+
+    *getInfo(_, { call, put }) {
+      const data = yield call(getAllTorrentsInfo);
+      yield put({
+        type: 'saveAllTorrentsInfo',
+        payload: data,
+      });
+
+      yield put({
+        type: 'changeSelectedTorrentInfo',
       });
     },
 
@@ -82,6 +98,12 @@ export default {
       });
     },
 
+    *patchSettings({ payload }, { call, put }) {
+      console.log(JSON.stringify(payload, null, 4));
+      const response = yield call(patchTorrentsSettings, payload);
+      console.log(response);
+    },
+
     *setLastSelectedRow({ payload }, { call, put }) {
       yield put({
         type: 'saveLastSelectedRow',
@@ -107,6 +129,10 @@ export default {
       yield put({
         type: 'changeSelectedTorrentSettings',
       });
+
+      yield put({
+        type: 'changeSelectedTorrentInfo',
+      });
     },
 
     *addSelectedFilter({ payload }, { call, put }) {
@@ -122,7 +148,6 @@ export default {
         payload: payload,
       });
     },
-
   },
 
   reducers: {
@@ -172,6 +197,28 @@ export default {
         ...state,
         torrentsList: tList,
         data_torrents_status: dtorrents_status,
+      };
+    },
+
+    saveAllTorrentsInfo(state, action) {
+      // INFO: This will delete any existing torrents in torrentsList that is not in
+      // the request json torrents list.
+      let tList = {
+        ...action.payload.torrents,
+      };
+      for (const key of Object.keys(state.torrentsList)) {
+        if (key in tList) {
+          let { info, ...other_keys } = state.torrentsList[key];
+          tList[key] = {
+            ...tList[key],
+            ...other_keys,
+          };
+        }
+      }
+
+      return {
+        ...state,
+        torrentsList: tList,
       };
     },
 
@@ -355,19 +402,21 @@ export default {
     },
 
     saveLastSelectedRow(state, action) {
+      // TODO - change the name for save lastSelectedInfo
       console.log(action);
       return {
         ...state,
         lastSelectedRow: action.payload,
+        lastSelectedId: state.data_torrents_status[action.payload].id,
       };
     },
 
     changeSelectedTorrentDetails(state, action) {
-      const dtorrents_details = {};
+      var dtorrents_details = {};
       const id = state.data_torrents_status[state.lastSelectedRow].id;
       let t = state.torrentsList[id];
       if (typeof t !== 'undefined' && typeof t.status !== 'undefined') {
-        dtorrents_details.total_download = t.status.total_download;
+        /*dtorrents_details.total_download = t.status.total_download;
         dtorrents_details.download_rate = t.status.download_rate;
         dtorrents_details.download_limit = t.status.download_limit;
         dtorrents_details.ratio = t.status.total_upload / t.status.total_download;
@@ -383,12 +432,41 @@ export default {
         dtorrents_details.num_peers = t.status.num_peers;
         dtorrents_details.distributed_copies = t.status.distributed_copies;
         dtorrents_details.current_tracker = t.status.current_tracker;
-        dtorrents_details.progress = (t.status.progress * 100).toFixed(1);
+        dtorrents_details.progress = (t.status.progress * 100).toFixed(1); */
+        dtorrents_details = {
+          ...t.status,
+          progress: (t.status.progress * 100).toFixed(1),
+          ratio: t.status.total_upload / t.status.total_download,
+          eta: 999, // TODO
+        };
       }
 
       return {
         ...state,
         data_torrents_details: dtorrents_details,
+      };
+    },
+
+    changeSelectedTorrentInfo(state, action) {
+      var dtorrents_info = {};
+      let t = state.torrentsList[state.lastSelectedId];
+      if (typeof t !== 'undefined' && typeof t.info !== 'undefined') {
+        dtorrents_info = { ...t.info }; // TODO - use the spread operator like this in other functions in the file. Its better this way.
+      }
+
+      return {
+        ...state,
+        data_torrents_info: dtorrents_info,
+      };
+    },
+
+    insertSelectedFilter(state, action) {
+      const selectedFilters = [...state.selectedFilters];
+      selectedFilters.push(action.payload);
+
+      return {
+        ...state,
+        selectedFilters: selectedFilters,
       };
     },
 
@@ -411,6 +489,5 @@ export default {
         selectedFilters: selectedFilters,
       };
     },
-
   },
 };

@@ -1,13 +1,23 @@
 import React, { Component, Fragment } from 'react';
 import { connect } from 'dva';
-import { Row, Col, Table, Tabs, Select, Divider, Progress, Checkbox, InputNumber, Input } from 'antd';
+import {
+  Button,
+  Row,
+  Col,
+  Table,
+  Tabs,
+  Select,
+  Divider,
+  Progress,
+  Checkbox,
+  InputNumber,
+  Input,
+} from 'antd';
 import styles from './TorrentsView.less';
-import StatusBar from 'components/StatusBar';
-import TorrentsTable from 'components/TorrentsTable';
 
 const { TabPane } = Tabs;
 
-const columns_torrents_status = [
+const columnsTorrentsStatus = [
   { title: '#', width: 50, dataIndex: 'queue_position', fixed: 'left' },
   { title: 'Name', width: 350, dataIndex: 'name', fixed: 'left' },
   { title: 'Down Speed', dataIndex: 'download_rate', width: 100 },
@@ -27,7 +37,7 @@ const columns_torrents_status = [
   { title: 'Info Hash', dataIndex: 'info_hash', width: 1000 },
 ];
 
-const columns_torrents_files = [
+const columnsTorrentsFiles = [
   { title: '#', width: 50, dataIndex: 'index' },
   { title: 'Priority', width: 150, dataIndex: 'priority' },
   { title: 'Path', width: 600, dataIndex: 'path' },
@@ -36,7 +46,7 @@ const columns_torrents_files = [
   { title: 'Size', width: 200, dataIndex: 'size' },
 ];
 
-const columns_torrents_peers = [
+const columnsTorrentsPeers = [
   { title: 'Address', width: 150, dataIndex: 'address' },
   { title: 'Client', width: 150, dataIndex: 'client' },
   { title: 'Progress', width: 150, dataIndex: 'progress' },
@@ -44,7 +54,7 @@ const columns_torrents_peers = [
   { title: 'Up Speed', width: 150, dataIndex: 'up_speed' },
 ];
 
-const columns_torrents_trackers = [
+const columnsTorrentsTrackers = [
   { title: 'Tier', width: 75, dataIndex: 'tier' },
   { title: 'URL', width: 600, dataIndex: 'url' },
   { title: 'Next Announce', width: 150, dataIndex: 'next_announce' },
@@ -57,17 +67,26 @@ const columns_torrents_trackers = [
   program,
 }))
 export default class TorrentView extends Component {
-  state = {};
+  state = {
+    selected_torrent_settings: {
+      download_limit: 0,
+      upload_limit: 0,
+      sequential_download: false,
+    },
+  };
 
   componentDidMount() {
-    var torrentStatusUpdateTime = 3000; // TODO - This should be in store
+    const torrentStatusUpdateTime = 3000; // TODO - This should be in store
 
-    // TODO - Put this inside the respective components. Only send calls to the api (dispatch) when component is mounted.
+    // TODO - Put this inside the respective components. Only send calls to the api (dispatch) when component is visible.
     // No need to keep GETing peers when the peer table is not in the screen.
     this.torrentStatusInverval = setInterval(() => {
       const { dispatch } = this.props;
       dispatch({
         type: 'torrents/getStatus',
+      });
+      dispatch({
+        type: 'torrents/getInfo',
       });
       dispatch({
         type: 'torrents/getFiles',
@@ -87,7 +106,6 @@ export default class TorrentView extends Component {
       dispatch({
         type: 'program/getSettings',
       });
-
     }, torrentStatusUpdateTime);
   }
 
@@ -95,14 +113,37 @@ export default class TorrentView extends Component {
     clearInterval(this.torrentStatusInverval);
   }
 
-  torrents_table_click(record, index) {
-    //console.log(record, index);
-    //this.props.torrents.lastSelectedRow = index; // TODO - this is NOT the correct way to set the state. Use dispatch or setState. Im not sure.
-    //this.forceUpdate();
+  torrentsTableClick(record, index) {
     const { dispatch } = this.props;
+    const { torrents } = this.props;
+
     dispatch({
       type: 'torrents/setLastSelectedRow',
       payload: index,
+    });
+
+    const id = torrents.data_torrents_status[index].id;
+    let t = torrents.torrentsList[id];
+    if (typeof t !== 'undefined' && t.settings !== 'undefined') {
+      this.setState({
+        selected_torrent_settings: {
+          download_limit: t.settings.download_limit,
+          upload_limit: t.settings.upload_limit,
+          sequential_download: t.settings.sequential_download,
+        },
+      });
+    }
+  }
+
+  handleAppleSettingsClick() {
+    const { dispatch, torrents } = this.props;
+    dispatch({
+      type: 'torrents/patchSettings',
+      payload: {
+        torrents: {
+          [torrents.lastSelectedId]: { settings: this.state.selected_torrent_settings },
+        },
+      },
     });
   }
 
@@ -116,19 +157,18 @@ export default class TorrentView extends Component {
             className={styles.torrentsTable}
             onRow={(record, index) => {
               return {
-                onClick: e => {
-                  console.log(e);
-                  this.torrents_table_click(record, index);
-                }, // click row
+                onClick: () => {
+                  this.torrentsTableClick(record, index);
+                },
               };
             }}
             rowClassName={(record, index) => {
-              if (this.props.torrents.lastSelectedRow === index) return 'ant-table-row-selected';
+              if (torrents.lastSelectedRow === index) return 'ant-table-row-selected';
               else return '';
             }}
-            size={'small'}
-            bordered={true}
-            columns={columns_torrents_status}
+            size="small"
+            bordered
+            columns={columnsTorrentsStatus}
             dataSource={torrents.data_torrents_status}
             scroll={{ x: 9000, y: 400 }}
             pagination={false}
@@ -138,11 +178,11 @@ export default class TorrentView extends Component {
         <Row gutter={24}>
           <div>
             <Tabs>
-              <TabPane tab="Details" key="1">
+              <TabPane tab="Details" key="Details">
                 <div>
                   <Row>
                     <Col span={24}>
-                      <Progress percent={torrents.data_torrents_details.progress} status="active" />
+                      <Progress percent={torrents.data_torrents_details.progress} />
                     </Col>
                   </Row>
                   <Row>
@@ -174,78 +214,118 @@ export default class TorrentView extends Component {
                   <Divider orientation="left">Information</Divider>
                   <Row>
                     <Col span={6}>
-                      <p> Total Size: 999</p>
-                      <p> Save Path: 999</p>
+                      <p> Total Size: {torrents.data_torrents_info.total_size}</p>
+                      <p> Save Path: {torrents.data_torrents_details.save_path}</p>
                     </Col>
                     <Col span={6}>
-                      <p> Pieces: 99 (8MB)</p>
-                      <p> Info Hash: 999</p>
+                      <p> Pieces: {torrents.data_torrents_info.num_pieces} ({torrents.data_torrents_info.piece_length})</p>
+                      <p> Info Hash: {torrents.data_torrents_info.info_hash}</p>
                     </Col>
                     <Col span={6}>
-                      <p> Created By: abc</p>
-                      <p> Created On: abc</p>
+                      <p> Created By: {torrents.data_torrents_info.creator}</p>
+                      <p> Created On: {torrents.data_torrents_info.creation_date}</p>
                     </Col>
                     <Col span={6}>
-                      <p> Added On: 999</p>
-                      <p> Completed On: 999</p>
+                      <p> Added On: {torrents.data_torrents_details.added_time}</p>
+                      <p> Completed On: {torrents.data_torrents_details.completed_time}</p>
                     </Col>
                   </Row>
                   <Row>
                     <Col span={6}>
-                      <p> Private: no</p>
+                      <p> Private: {torrents.data_torrents_info.priv}</p>
                     </Col>
                     <Col span={18}>
-                      <p> Comments: abc</p>
+                      <p> Comments: {torrents.data_torrents_info.comment}</p>
                     </Col>
                   </Row>
                 </div>
               </TabPane>
-              <TabPane tab="Files" key="2">
+              <TabPane tab="Files" key="Files">
                 <Table
-                  size={'small'}
-                  columns={columns_torrents_files}
+                  size="small"
+                  columns={columnsTorrentsFiles}
                   dataSource={torrents.data_torrents_files}
                   scroll={{ x: 1000, y: 200 }}
-                  bordered={true}
+                  bordered
                   pagination={false}
                 />
               </TabPane>
-              <TabPane tab="Peers" key="3">
+              <TabPane tab="Peers" key="Peers">
                 <Table
-                  size={'small'}
-                  columns={columns_torrents_peers}
+                  size="small"
+                  columns={columnsTorrentsPeers}
                   dataSource={torrents.data_torrents_peers}
                   scroll={{ x: 1000, y: 200 }}
-                  bordered={true}
+                  bordered
                   pagination={false}
                 />
               </TabPane>
-              <TabPane tab="Trackers" key="4">
+              <TabPane tab="Trackers" key="Trackers">
                 <Table
-                  size={'small'}
-                  columns={columns_torrents_trackers}
+                  size="small"
+                  columns={columnsTorrentsTrackers}
                   dataSource={torrents.data_torrents_trackers}
                   scroll={{ x: 1000, y: 200 }}
-                  bordered={true}
+                  bordered
                   pagination={false}
                 />
               </TabPane>
-              <TabPane tab="Settings" key="5">
+              <TabPane tab="Settings" key="Settings">
                 <Row>
                   <Col span={6}>
                     <div>
-                      <Input addonBefore="Download Speed Limit" addonAfter="KB/s" defaultValue={torrents.data_torrents_settings.download_limit} />
+                      <Input
+                        addonBefore="Download Speed Limit"
+                        addonAfter="KB/s"
+                        value={this.state.selected_torrent_settings.download_limit}
+                        onChange={e => {
+                          this.setState({
+                            selected_torrent_settings: {
+                              ...this.state.selected_torrent_settings,
+                              download_limit: parseInt(e.target.value, 10),
+                            },
+                          });
+                        }}
+                      />
                     </div>
 
                     <div>
-                  
-                      <Input addonBefore="Upload Speed Limit" addonAfter="KB/s" defaultValue={torrents.data_torrents_settings.upload_limit} />
-
+                      <Input
+                        addonBefore="Upload Speed Limit"
+                        addonAfter="KB/s"
+                        value={this.state.selected_torrent_settings.upload_limit}
+                        onChange={e => {
+                          this.setState({
+                            selected_torrent_settings: {
+                              ...this.state.selected_torrent_settings,
+                              upload_limit: parseInt(e.target.value, 10),
+                            },
+                          });
+                        }}
+                      />
                     </div>
 
                     <div>
-                      <Checkbox >Sequential download</Checkbox>{' '}
+                      <Checkbox
+                        checked={this.state.selected_torrent_settings.sequential_download}
+                        onChange={() => {
+                          this.setState({
+                            selected_torrent_settings: {
+                              ...this.state.selected_torrent_settings,
+                              sequential_download: !this.state.selected_torrent_settings
+                                .sequential_download,
+                            },
+                          });
+                        }}
+                      >
+                        Sequential download
+                      </Checkbox>
                     </div>
+
+                    <Button onClick={this.handleAppleSettingsClick.bind(this)}>
+                      {' '}
+                      Apple settings{' '}
+                    </Button>
                   </Col>
                   <Col span={6} />
                   <Col span={6} />

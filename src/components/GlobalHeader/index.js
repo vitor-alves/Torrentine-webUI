@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { Menu, Icon, Spin, Tag, Dropdown, Avatar, Divider, Tooltip } from 'antd';
+import { Button, Menu, Icon, Spin, Tag, Dropdown, Avatar, Divider, Tooltip } from 'antd';
 import Debounce from 'lodash-decorators/debounce';
 import { Link } from 'dva/router';
 import HeaderSearch from '../HeaderSearch';
@@ -65,13 +65,13 @@ export default class GlobalHeader extends PureComponent {
         />
 
         <div className={styles.left}>
-          <Icon type="plus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Add
-          <Icon type="minus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Remove
-          <Icon type="caret-right" style={{ fontSize: 20, paddingLeft: '25px' }} /> Start
-          <Icon type="pause" style={{ fontSize: 20, paddingLeft: '25px' }} /> Pause
-          <Icon type="up" style={{ fontSize: 20, paddingLeft: '25px' }} /> Up
-          <Icon type="down" style={{ fontSize: 20, paddingLeft: '25px' }} /> Down
-          <Icon type="play-circle-o" style={{ fontSize: 20, paddingLeft: '25px' }} /> Stream
+          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="plus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Add </Button>
+          <Button  style={{height:"100%", border: "none"}} size = "small" > <Icon type="minus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Remove </Button>
+          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="caret-right" style={{ fontSize: 20, paddingLeft: '25px' }} /> Start </Button>
+          <Button  style={{height:"100%", border: "none"}} size = "small" > <Icon type="pause" style={{ fontSize: 20, paddingLeft: '25px' }} /> Pause </Button>
+          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="up" style={{ fontSize: 20, paddingLeft: '25px' }} /> Up </Button>
+          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="down" style={{ fontSize: 20, paddingLeft: '25px' }} /> Down </Button>
+          <Button  style={{height:"100%", border: "none"}} size = "small" > <Icon type="play-circle-o" style={{ fontSize: 20, paddingLeft: '25px' }} /> Stream </Button>
         </div>
 
         <div className={styles.right}>

@@ -13,6 +13,12 @@ export async function getAllTorrentsStatus() {
   }); // TODO - get ip/port from state
 }
 
+export async function getAllTorrentsInfo() {
+  return request('http://localhost:8040/v1.0/torrents//info', {
+    headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
+  }); // TODO - get ip/port from state
+}
+
 export async function getAllTorrentsFiles() {
   return request('http://localhost:8040/v1.0/torrents//files', {
     headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
@@ -48,3 +54,12 @@ export async function getAllTorrentsSettings() {
     headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
   }); // TODO - get ip/port from state
 }
+
+export async function patchTorrentsSettings(params) {
+  return request('http://localhost:8040/v1.0/torrents/settings', {
+    method: 'PATCH',
+    body: params,
+    headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
+  }); // TODO - get ip/port from state
+}
+
