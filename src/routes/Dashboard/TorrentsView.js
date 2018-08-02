@@ -124,7 +124,7 @@ export default class TorrentView extends Component {
 
     const id = torrents.data_torrents_status[index].id;
     let t = torrents.torrentsList[id];
-    if (typeof t !== 'undefined' && t.settings !== 'undefined') {
+    if (typeof t !== 'undefined' && typeof t.settings !== 'undefined') {
       this.setState({
         selected_torrent_settings: {
           download_limit: t.settings.download_limit,

@@ -1,11 +1,32 @@
 import React, { PureComponent } from 'react';
-import { Button, Menu, Icon, Spin, Tag, Dropdown, Avatar, Divider, Tooltip } from 'antd';
+import {
+  Modal,
+  Button,
+  Menu,
+  Icon,
+  Spin,
+  Tag,
+  Dropdown,
+  Avatar,
+  Divider,
+  Tooltip,
+  Upload,
+  message,
+} from 'antd';
 import Debounce from 'lodash-decorators/debounce';
 import { Link } from 'dva/router';
 import HeaderSearch from '../HeaderSearch';
 import styles from './index.less';
 
+const Dragger = Upload.Dragger;
+
 export default class GlobalHeader extends PureComponent {
+  state = {
+    addTorrentVisible: false,
+
+    fileList: [],
+  };
+
   componentWillUnmount() {
     this.triggerResizeEvent.cancel();
   }
@@ -22,14 +43,27 @@ export default class GlobalHeader extends PureComponent {
     event.initEvent('resize', true, false);
     window.dispatchEvent(event);
   }
+
+  addTorrentHandleOk = () => {
+    this.setState({
+      addTorrentVisible: false,
+    });
+  };
+
+  addTorrentHandleCancel = () => {
+    this.setState({
+      addTorrentVisible: false,
+    });
+  };
+
+  handleUploadChange = info => {
+    let fileList = info.fileList;
+
+    this.setState({ fileList });
+  };
+
   render() {
-    const {
-      currentUser = {},
-      collapsed,
-      isMobile,
-      logo,
-      onMenuClick,
-    } = this.props;
+    const { currentUser = {}, collapsed, isMobile, logo, onMenuClick, torrents } = this.props;
     const menu = (
       <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick}>
         <Menu.Item key="settings">
@@ -65,13 +99,117 @@ export default class GlobalHeader extends PureComponent {
         />
 
         <div className={styles.left}>
-          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="plus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Add </Button>
-          <Button  style={{height:"100%", border: "none"}} size = "small" > <Icon type="minus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Remove </Button>
-          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="caret-right" style={{ fontSize: 20, paddingLeft: '25px' }} /> Start </Button>
-          <Button  style={{height:"100%", border: "none"}} size = "small" > <Icon type="pause" style={{ fontSize: 20, paddingLeft: '25px' }} /> Pause </Button>
-          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="up" style={{ fontSize: 20, paddingLeft: '25px' }} /> Up </Button>
-          <Button style={{height:"100%", border: "none"}} size = "small" > <Icon type="down" style={{ fontSize: 20, paddingLeft: '25px' }} /> Down </Button>
-          <Button  style={{height:"100%", border: "none"}} size = "small" > <Icon type="play-circle-o" style={{ fontSize: 20, paddingLeft: '25px' }} /> Stream </Button>
+          <Button
+            style={{ height: '100%', border: 'none' }}
+            size="small"
+            onClick={() => {
+              this.setState({ addTorrentVisible: true });
+            }}
+          >
+            <Icon type="plus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Add{' '}
+          </Button>
+          <Modal
+            title="Add Torrent"
+            visible={this.state.addTorrentVisible}
+            onOk={this.addTorrentHandleOk}
+            onCancel={this.addTorrentHandleCancel}
+          >
+            <Button>
+              <Icon type="upload" /> Magnet
+            </Button>
+            <Button>
+              <Icon type="upload" /> Infohash
+            </Button>
+            <Button>
+              <Icon type="upload" /> URL
+            </Button>
+            <Upload
+              action="http://localhost:8040/v1.0/torrents/upload" // TODO - this should come from somewhere
+              headers={{ Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') }} // TODO - get from store
+              onChange={this.handleUploadChange}
+              multiple
+              fileList={this.state.fileList}
+              style={{ display: 'inline-block' }}
+            >
+              <Button>
+                <Icon type="upload" /> File
+              </Button>
+            </Upload>
+          </Modal>{' '}
+          <Button
+            style={{ height: '100%', border: 'none' }}
+            size="small"
+            onClick={() => {
+              const { dispatch } = this.props;
+              dispatch({
+                type: 'torrents/removeTorrents',
+                payload: torrents.lastSelectedId,
+              });
+            }}
+          >
+            {' '}
+            <Icon type="minus" style={{ fontSize: 20, paddingLeft: '25px' }} /> Remove{' '}
+          </Button>
+          <Button
+            style={{ height: '100%', border: 'none' }}
+            size="small"
+            onClick={() => {
+              const { dispatch } = this.props;
+              dispatch({
+                type: 'torrents/startTorrents',
+                payload: torrents.lastSelectedId,
+              });
+            }}
+          >
+            {' '}
+            <Icon type="caret-right" style={{ fontSize: 20, paddingLeft: '25px' }} /> Start{' '}
+          </Button>
+          <Button
+            style={{ height: '100%', border: 'none' }}
+            size="small"
+            onClick={() => {
+              const { dispatch } = this.props;
+              dispatch({
+                type: 'torrents/pauseTorrents',
+                payload: torrents.lastSelectedId,
+              });
+            }}
+          >
+            {' '}
+            <Icon type="pause" style={{ fontSize: 20, paddingLeft: '25px' }} /> Pause{' '}
+          </Button>
+          <Button
+            style={{ height: '100%', border: 'none' }}
+            size="small"
+            onClick={() => {
+              const { dispatch } = this.props;
+              dispatch({
+                type: 'torrents/setQueueTorrent',
+                payload: { id: torrents.lastSelectedId, queue_position: 'up' },
+              });
+            }}
+          >
+            {' '}
+            <Icon type="up" style={{ fontSize: 20, paddingLeft: '25px' }} /> Up{' '}
+          </Button>
+          <Button
+            style={{ height: '100%', border: 'none' }}
+            size="small"
+            onClick={() => {
+              const { dispatch } = this.props;
+              dispatch({
+                type: 'torrents/setQueueTorrent',
+                payload: { id: torrents.lastSelectedId, queue_position: 'down' },
+              });
+            }}
+          >
+            {' '}
+            <Icon type="down" style={{ fontSize: 20, paddingLeft: '25px' }} /> Down{' '}
+          </Button>
+          <Button style={{ height: '100%', border: 'none' }} size="small">
+            {' '}
+            <Icon type="play-circle-o" style={{ fontSize: 20, paddingLeft: '25px' }} /> Stream{' '}
+          </Button>
         </div>
 
         <div className={styles.right}>

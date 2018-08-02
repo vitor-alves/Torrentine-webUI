@@ -6,6 +6,10 @@ import {
   getAllTorrentsTrackers,
   getAllTorrentsSettings,
   patchTorrentsSettings,
+  deleteTorrents,
+  stopTorrents,
+  patchStartTorrents,
+  patchQueueTorrent,
 } from '../services/api';
 
 export default {
@@ -99,7 +103,6 @@ export default {
     },
 
     *patchSettings({ payload }, { call, put }) {
-      console.log(JSON.stringify(payload, null, 4));
       const response = yield call(patchTorrentsSettings, payload);
       console.log(response);
     },
@@ -148,6 +151,26 @@ export default {
         payload: payload,
       });
     },
+
+    *removeTorrents({ payload }, { call, put }) {
+      const response = yield call(deleteTorrents, payload);
+    },
+
+    *pauseTorrents({ payload }, { call, put }) {
+      const response = yield call(stopTorrents, payload);
+      console.log(response);
+    },
+
+    *startTorrents({ payload }, { call, put }) {
+      const response = yield call(patchStartTorrents, payload);
+      console.log(response);
+    },
+
+    *setQueueTorrent({ payload }, { call, put }) {
+      const response = yield call(patchQueueTorrent, payload);
+      console.log(response);
+    },
+
   },
 
   reducers: {

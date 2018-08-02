@@ -63,3 +63,32 @@ export async function patchTorrentsSettings(params) {
   }); // TODO - get ip/port from state
 }
 
+export async function deleteTorrents(params) {
+  return request('http://localhost:8040/v1.0/torrents/'+params, { // INFO: params is a sequence of ids in format 1,2,3....
+    method: 'DELETE',
+    headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
+  }); // TODO - get ip/port from state
+}
+
+export async function stopTorrents(params) {
+  return request('http://localhost:8040/v1.0/torrents/'+params+'/stop', { // INFO: params is a sequence of ids in format 1,2,3....
+    method: 'PATCH',
+    headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
+  }); // TODO - get ip/port from state
+}
+
+export async function patchStartTorrents(params) {
+  return request('http://localhost:8040/v1.0/torrents/'+params+'/start', { // INFO: params is a sequence of ids in format 1,2,3....
+    method: 'PATCH',
+    headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
+  }); // TODO - get ip/port from state
+}
+
+export async function patchQueueTorrent(params) {
+  return request('http://localhost:8040/v1.0/queue/torrents/'+params.id, { // INFO: params is a sequence of ids in format 1,2,3....
+    method: 'PATCH',
+    body: params,
+    headers: { Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') },
+  }); // TODO - get ip/port from state
+}
+

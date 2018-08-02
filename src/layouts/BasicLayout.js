@@ -235,6 +235,8 @@ class BasicLayout extends React.PureComponent {
               isMobile={mb}
               onCollapse={this.handleMenuCollapse}
               onMenuClick={this.handleMenuClick}
+              torrents={torrents}
+              dispatch={this.props.dispatch}
             />
           </Header>
           <Content style={{ margin: '24px 24px 0', height: '100%' }}>
@@ -273,11 +275,10 @@ class BasicLayout extends React.PureComponent {
   }
 }
 
-export default connect(({ user, global = {}, program, torrents}) => ({
+export default connect(({ user, global = {}, program, torrents }) => ({
   currentUser: user.currentUser,
   collapsed: global.collapsed,
   notices: global.notices,
   program,
   torrents,
-
 }))(BasicLayout);
