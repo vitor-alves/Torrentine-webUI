@@ -5,7 +5,7 @@ import {
   Menu,
   Icon,
   Spin,
-  Tag,
+  List,
   Dropdown,
   Avatar,
   Divider,
@@ -25,6 +25,7 @@ export default class GlobalHeader extends PureComponent {
     addTorrentVisible: false,
 
     fileList: [],
+    fileNameList: [],
   };
 
   componentWillUnmount() {
@@ -57,9 +58,12 @@ export default class GlobalHeader extends PureComponent {
   };
 
   handleUploadChange = info => {
-    let fileList = info.fileList;
+   let fNameList = this.state.fileNameList;
+    fNameList.push(info.file.name);
+    let fList = this.state.fileList;
+    fList.push(info.file);
 
-    this.setState({ fileList });
+    this.setState({ fileNameList: fNameList, fileList: fList});
   };
 
   render() {
@@ -128,13 +132,23 @@ export default class GlobalHeader extends PureComponent {
               headers={{ Authorization: 'Basic ' + btoa('test_user' + ':' + 'test_pass') }} // TODO - get from store
               onChange={this.handleUploadChange}
               multiple
-              fileList={this.state.fileList}
+              fileList={[]}
               style={{ display: 'inline-block' }}
+              onPreview={file => {
+                file.status = 'error';
+              }}
             >
               <Button>
                 <Icon type="upload" /> File
               </Button>
             </Upload>
+
+            <List
+              size="small"
+              bordered
+              dataSource={this.state.fileNameList}
+              renderItem={item => <List.Item>{item}</List.Item>}
+            />
           </Modal>{' '}
           <Button
             style={{ height: '100%', border: 'none' }}
